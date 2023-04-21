@@ -1,0 +1,14 @@
+<launch>
+  <node
+    pkg="hand-it-to-me"
+    type="pub_hand_pose_node.py"
+    name="webcam_pub"
+    output="screen"
+  />
+  <node
+    pkg="hand-it-to-me"
+    type="sub_hand_pose_node.py"
+    name="webcam_sub"
+    output="screen"
+  />
+</launch>

@@ -8,7 +8,7 @@ from sensor_msgs.msg import Image
 from geometry_msgs.msg import PoseStamped
 from cv_bridge import CvBridge
 from collections import deque
-     
+from pose_functions import *
 
 class CircleDetector:
 
@@ -32,28 +32,10 @@ class CircleDetector:
     def image_callback(self, msg):
     
         frame = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        blurred = cv2.GaussianBlur(gray, (5, 5), 0)
-        circles = cv2.HoughCircles(blurred, cv2.HOUGH_GRADIENT, dp=1, minDist=self.min_distance,
-                                param1=self.threshold, param2=30, minRadius=self.min_radius,
-                                maxRadius=self.max_radius)
-        if circles is not None:
-            circles = np.round(circles[0, :]).astype("int")
-            for (x, y, r) in circles:
-                cv2.circle(frame, (x, y), r, (0, 255, 0), 2)
-                self.queue_radius.append(r)
-                self.queue_pose_x.append(x)
-                self.queue_pose_y.append(y)
-                self.pose_msg.pose.position.x = statistics.median(self.queue_pose_x)
-                self.pose_msg.pose.position.y = statistics.median(self.queue_pose_y)
-                radius = statistics.median(self.queue_radius)
-                print(radius)
-                self.pose_msg.pose.position.z = 0.0
-                self.pose_msg.pose.orientation.x = 0.0
-                self.pose_msg.pose.orientation.y = 0.0
-                self.pose_msg.pose.orientation.z = 0.0
-                self.pose_msg.pose.orientation.w = 1.0
-                self.output_pub.publish(self.pose_msg)
+
+        self.can_top_pose = get_can_pose_vertical_hough(frame,self.queue_pose_x, self.queue_pose_y,self.queue_radius,self.min_radius,self.max_radius,self.threshold,self.min_distance,self.pose_msg)
+
+        self.output_pub.publish(self.can_top_pose)
 
         image_msg = self.bridge.cv2_to_imgmsg(frame, encoding='bgr8')     
         if image_msg is not None and len(image_msg.data) > 0:

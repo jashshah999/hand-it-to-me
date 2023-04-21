@@ -3,6 +3,7 @@ import cv2
 import numpy as np
 import uuid
 import os
+import statistics
 
 mp_drawing = mp.solutions.drawing_utils
 mp_hands = mp.solutions.hands
@@ -35,7 +36,7 @@ def get_hand_pose(frame, vis_flag = 1):
             
     return hand_pose
 
-def get_can_pose_vertical_template(frame):
+def get_can_pose_vertical(frame):
     template_circle = cv2.imread('template_circle.png')
     w, h = template_circle.shape[::-1]
     gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -49,7 +50,7 @@ def get_can_pose_vertical_template(frame):
     return top_left, top_right, bottom_left, bottom_right
 
 
-def get_can_pose_horizontal(frame):
+def get_can_pose_horizontal_hsv(frame):
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV) 
 
     l_h = 100 # 128
@@ -74,6 +75,31 @@ def get_can_pose_horizontal(frame):
             return identifier_coordinates
 
 
+def get_can_pose_vertical_hough(frame, queue_x, queue_y, queue_radius,min_radius,max_radius,threshold,min_distance,pose_msg):
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+    circles = cv2.HoughCircles(blurred, cv2.HOUGH_GRADIENT, dp=1, minDist=min_distance,
+                                param1=threshold, param2=30, minRadius=min_radius,
+                                maxRadius=max_radius)
+    
+    if circles is not None:
+            circles = np.round(circles[0, :]).astype("int")
+            for (x, y, r) in circles:
+                cv2.circle(frame, (x, y), r, (0, 255, 0), 2)
+                queue_radius.append(r)
+                queue_x.append(x)
+                queue_y.append(y)
+                pose_msg.pose.position.x = statistics.median(queue_x)
+                pose_msg.pose.position.y = statistics.median(queue_y)
+                radius = statistics.median(queue_radius)
+                print(radius)
+                pose_msg.pose.position.z = 0.0
+                pose_msg.pose.orientation.x = 0.0
+                pose_msg.pose.orientation.y = 0.0
+                pose_msg.pose.orientation.z = 0.0
+                pose_msg.pose.orientation.w = 1.0
 
+                return pose_msg
+      
 
 

@@ -35,7 +35,7 @@ def get_hand_pose(frame, vis_flag = 1):
             
     return hand_pose
 
-def get_can_pose_vertical_template(frame):
+def get_can_pose_vertical(frame):
     template_circle = cv2.imread('template_circle.png')
     w, h = template_circle.shape[::-1]
     gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)

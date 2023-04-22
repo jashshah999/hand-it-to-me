@@ -34,9 +34,9 @@ def get_hand_pose(frame, vis_flag = 1):
                                         mp_drawing.DrawingSpec(color=(250, 44, 250), thickness=2, circle_radius=2),
                                         )
             
-    return hand_pose
+    return hand_pose    
 
-def get_can_pose_vertical(frame):
+def get_can_pose_vertical_template(frame):
     template_circle = cv2.imread('template_circle.png')
     w, h = template_circle.shape[::-1]
     gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -100,6 +100,7 @@ def get_can_pose_vertical_hough(frame, queue_x, queue_y, queue_radius,min_radius
                 pose_msg.pose.orientation.w = 1.0
 
                 return pose_msg
-      
+
+
 
 

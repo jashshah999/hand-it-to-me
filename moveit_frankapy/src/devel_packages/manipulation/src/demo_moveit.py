@@ -36,6 +36,8 @@ class moveit_planner():
         planning_frame = self.group.get_planning_frame()
         eef_link = self.group.get_end_effector_link()
 
+        self.goal_pub = rospy.Subscriber("/goal_location", geometry_msgs.msg.PoseStamped, self.goal_pose_callback, queue_size=1)
+        self.is_goal_active = False
         print("---------Moveit Planner Class Initialized---------")
         print("Planning frame: ", planning_frame)
         print("End effector: ", eef_link)
@@ -221,15 +223,18 @@ class moveit_planner():
             pose_goal.orientation.w = 0.020126567105018894
         
         # Convert to moveit pose
-        pose_goal = self.get_moveit_pose_given_frankapy_pose(pose_goal)
-        print("Pose Goal: ", pose_goal)
-        print("Resetting Joints")
-        self.fa.reset_joints()
-        plan_pose = self.get_plan_given_pose(pose_goal)
-        print("Planned Path Shape: ", plan_pose.shape)
-        if execute:
-            print("Executing Plan")
-            self.execute_plan(plan_pose)
+        if self.is_goal_active:
+            pose_goal = self.get_moveit_pose_given_frankapy_pose(self.pose_goal)
+            print("Pose Goal: ", pose_goal)
+            print("Resetting Joints")
+            self.fa.reset_joints()
+            plan_pose = self.get_plan_given_pose(pose_goal)
+            print("Planned Path Shape: ", plan_pose.shape)
+            if execute:
+                print("Executing Plan")
+                self.execute_plan(plan_pose)
+
+            self.is_goal_active = False
 
     def get_moveit_pose_given_frankapy_pose(self, pose):
         """
@@ -293,6 +298,19 @@ class moveit_planner():
     def remove_box(self, name):
         self.scene.remove_world_object(name)
 
+    def goal_pose_callback(self, data):
+        pose_goal = self.get_moveit_pose_given_frankapy_pose(data.pose)
+        print("Pose Goal: ", data.pose)
+        # print("Resetting Joints")
+        # self.fa.reset_joints()
+        plan_pose = self.get_plan_given_pose(pose_goal)
+        print("Planned Path Shape: ", plan_pose.shape)
+        # if execute:
+        print("Executing Plan")
+        self.execute_plan(plan_pose)
+
+
+
 if __name__ == "__main__":
     franka_moveit = moveit_planner()
 
@@ -307,7 +325,7 @@ if __name__ == "__main__":
     # franka_moveit.unit_test_joint(execute=True, guided=True) 
 
     # Test Tool Position Planning
-    franka_moveit.unittest_pose(execute=True, guided=True)
+    franka_moveit.unit_test_pose(execute=True, guided=False)
 
     # Adding and removing obstacle boxes to planning scene
     # box_pose = geometry_msgs.msg.PoseStamped()
@@ -320,6 +338,7 @@ if __name__ == "__main__":
     # box_pose.pose.orientation.z = 0.02544852
     # box_pose.pose.orientation.w = -0.00495174
     # franka_moveit.add_box("box", box_pose, [0.02, 0.065, 0.015])
+    rospy.spin()
 
     # Remove added obstacle box
     # franka_moveit.remove_box("box")

@@ -2,13 +2,18 @@
 
 import rospy
 from geometry_msgs.msg import PoseStamped
+from frankapy import FrankaArm
+
+fa = FrankaArm()
 
 def callback(data):
     # change the frame_id and keep everything else the same
     data.header.frame_id = ""
     # change the x position of the goal pose by 0.1
     data.pose.position.x += 0.17
-
+    # Check if the robot has reached the goal pose, if yes then move the robot to z =0.13 for the same x and y position
+    if fa.reached_goal(data):
+        data.pose.position.z = 0.13
     pub.publish(data)
 
 if __name__ == '__main__':

@@ -22,7 +22,7 @@ class CircleDetector:
         self.output_pub = rospy.Publisher('detected_circle_pose', PoseStamped, queue_size=1)
         self.pose_msg = PoseStamped()
         self.pose_msg.header.frame_id = "kinect"
-        self.image_pub = rospy.Publisher('detected_circle_image', Image, queue_size=1)
+        # self.image_pub = rospy.Publisher('detected_circle_image', Image, queue_size=1)
         rospy.Subscriber('/rgb/image_raw', Image, self.image_callback)
 
         self.queue_pose_x = deque([],maxlen=10)
@@ -36,6 +36,8 @@ class CircleDetector:
         self.can_top_pose = get_can_pose_vertical_hough(frame,self.queue_pose_x, self.queue_pose_y,self.queue_radius,self.min_radius,self.max_radius,self.threshold,self.min_distance,self.pose_msg)
 
         self.output_pub.publish(self.can_top_pose)
+
+
 
         image_msg = self.bridge.cv2_to_imgmsg(frame, encoding='bgr8')     
         if image_msg is not None and len(image_msg.data) > 0:

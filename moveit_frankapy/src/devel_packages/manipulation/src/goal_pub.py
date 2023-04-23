@@ -38,7 +38,8 @@ def goal_pub():
             break
         rospy.loginfo(goal)
         pub.publish(goal)
-        rate.sleep()
+        # Wait for 4 seconds before publishing the next goal pose
+        rospy.sleep()
 
 if __name__ == '__main__':
     try:

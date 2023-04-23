@@ -59,7 +59,19 @@ def callback(data):
         # flag = 1
         if reached_goal(goal):
             fa.close_gripper()
-            
+            # Update the goal to home position
+            goal.pose.position.x = 0.3843781940153249
+            goal.pose.position.y = -0.25791107711908864
+            goal.pose.position.z = 0.23098061041636195
+            goal.pose.orientation.x = -0.9186984147774666
+            goal.pose.orientation.y = 0.3942492534293267
+            goal.pose.orientation.z = -0.012441904611284204
+            goal.pose.orientation.w = 0.020126567105018894
+
+            # Check if there is any force acting on the robot. If yes then open the gripper
+            force_torque = fa.get_ee_force_torque()
+            print("force_torque = ", force_torque)
+                # fa.open_gripper()
             # flag = 1
     pub.publish(goal)
 

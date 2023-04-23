@@ -5,41 +5,29 @@ from geometry_msgs.msg import PoseStamped
 def goal_pub():
     pub = rospy.Publisher('/goal_location', PoseStamped, queue_size=10)
     rospy.init_node('goal_pub', anonymous=True)
-    rate = rospy.Rate(10) # 10hz
-    # Read the goal poses from an array and then publish them one by one once the robot reaches the previous goal
+    rate = rospy.Rate(1) # 10hz
     goal = PoseStamped()
-    goal.header.seq = 0
-    goal.header.stamp = rospy.Time.now()
-    goal.header.frame_id = ""
-    goal.pose.position.x = 0.4
-    goal.pose.position.y = 0.0
-    goal.pose.position.z = 0.4
-    goal.pose.orientation.x = 0.0
-    goal.pose.orientation.y = 0.707
-    goal.pose.orientation.z = 0.0
-    goal.pose.orientation.w = 0.707
-    
+    goal.pose.position.y = -0.25791107711908864
+    temp = 1
     while not rospy.is_shutdown():
-        # Keep incerementing the x position of the goal pose by 0.1
-        goal = PoseStamped()
+        # Keep incerementing the y position of the goal pose by 0.1
         goal.header.seq = 0
-        goal.header.stamp = rospy.Time.now()
+        goal.header.stamp = rospy.Time.now()        
         goal.header.frame_id = ""
-        goal.pose.position.x = 0.4
-        goal.pose.position.x += 0.1
-        goal.pose.position.y = 0.0
-        goal.pose.position.z = 0.4
-        goal.pose.orientation.x = 0.0
-        goal.pose.orientation.y = 0.707
-        goal.pose.orientation.z = 0.0
-        goal.pose.orientation.w = 0.707
-        # Keep doing this until the x position of the goal pose reaches 0.8 then stop the node.
-        if goal.pose.position.x >= 0.8:
-            break
+        goal.pose.position.x = 0.3843781940153249
+        goal.pose.position.y += temp*0.1
+        goal.pose.position.z = 0.23098061041636195
+        goal.pose.orientation.x = -0.9186984147774666
+        goal.pose.orientation.y = 0.3942492534293267
+        goal.pose.orientation.z = -0.012441904611284204
+        goal.pose.orientation.w = 0.020126567105018894 
+        # Keep doing this until the y position of the goal pose reaches 0.3 then stop the node.
+        if goal.pose.position.y >= 0.29 or goal.pose.position.y <= -0.24:
+            temp = temp*(-1)
         rospy.loginfo(goal)
         pub.publish(goal)
-        # Wait for 4 seconds before publishing the next goal pose
-        rospy.sleep()
+        rate.sleep()
+        
 
 if __name__ == '__main__':
     try:

@@ -1,5 +1,3 @@
-from email.mime import base
-from pickle import FRAME
 import mediapipe as mp
 import cv2
 import numpy as np

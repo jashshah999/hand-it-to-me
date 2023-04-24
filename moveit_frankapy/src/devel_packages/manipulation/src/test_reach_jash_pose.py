@@ -6,8 +6,10 @@ from frankapy import FrankaArm
 
 fa = FrankaArm()
 flag = 1
+flag2 = 1
+flag3 =1
 goal = PoseStamped()
-
+fa.open_gripper()
 # def callback(data):
 #     global flag
 #     global fa
@@ -36,6 +38,8 @@ goal = PoseStamped()
 
 def callback(data):
     global flag
+    global flag2
+    global flag3
     global fa
     global goal
     if flag == 1:
@@ -49,29 +53,34 @@ def callback(data):
 
     # goal.pose.position.x = data.pose.position.x
     if reached_goal(goal):
-        goal.pose.position.x=goal.pose.position.x
-        goal.pose.position.y=goal.pose.position.y
-        goal.pose.position.z=0.13
-        goal.pose.orientation.x = 1
-        goal.pose.orientation.y = 0
-        goal.pose.orientation.z = 0
-        goal.pose.orientation.w = 0
+        if flag2 == 1:
+            goal.pose.position.x=goal.pose.position.x
+            goal.pose.position.y=goal.pose.position.y
+            goal.pose.position.z=0.13
+            goal.pose.orientation.x = 1
+            goal.pose.orientation.y = 0
+            goal.pose.orientation.z = 0
+            goal.pose.orientation.w = 0
         # flag = 1
         if reached_goal(goal):
-            fa.close_gripper()
+            flag2 = 0
+            if flag3 == 1:
+                fa.close_gripper()
             # Update the goal to home position
-            goal.pose.position.x = 0.3843781940153249
-            goal.pose.position.y = -0.25791107711908864
-            goal.pose.position.z = 0.23098061041636195
-            goal.pose.orientation.x = -0.9186984147774666
-            goal.pose.orientation.y = 0.3942492534293267
-            goal.pose.orientation.z = -0.012441904611284204
-            goal.pose.orientation.w = 0.020126567105018894
+            goal.pose.position.x = 3.06733989e-01
+            goal.pose.position.y = 9.06954314e-05
+            goal.pose.position.z = 4.86925653e-01
+            goal.pose.orientation.x = 1
+            goal.pose.orientation.y = 0
+            goal.pose.orientation.z = 0
+            goal.pose.orientation.w = 0
 
-            # Check if there is any force acting on the robot. If yes then open the gripper
-            force_torque = fa.get_ee_force_torque()
-            print("force_torque = ", force_torque)
-                # fa.open_gripper()
+    # Check if there is any force acting on the robot. If yes then open the gripper
+    force_torque = fa.get_ee_force_torque()
+    print("force_torque = ", force_torque[2])
+    if force_torque[2] > 6:
+        fa.open_gripper()
+        flag3 = 0
             # flag = 1
     pub.publish(goal)
 

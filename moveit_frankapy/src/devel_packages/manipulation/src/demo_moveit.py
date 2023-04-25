@@ -57,7 +57,7 @@ class moveit_planner():
         self.fa.reset_joints()
 
     def goto_joint(self, joint_goal):
-        self.fa.goto_joints(joint_goal, duration=5, dynamic=True, buffer_time=10)
+        self.fa.goto_joints(joint_goal, duration=5, dynamic=True, buffer_time=10, ignore_virtual_walls=False)
     
     def get_plan_given_pose(self, pose_goal: geometry_msgs.msg.Pose):
         """
@@ -128,7 +128,7 @@ class moveit_planner():
 
         rate = rospy.Rate(50)
         # To ensure skill doesn't end before completing trajectory, make the buffer time much longer than needed
-        self.fa.goto_joints(interpolated_traj[1], duration=5, dynamic=True, buffer_time=20)
+        self.fa.goto_joints(interpolated_traj[1], duration=5, dynamic=True, buffer_time=20, )
         init_time = rospy.Time.now().to_time()
         for i in range(2, interpolated_traj.shape[0]):
             traj_gen_proto_msg = JointPositionSensorMessage(

@@ -11,17 +11,16 @@ import rospy
 import pyrealsense2 as rs2
 
 class HandPoseDetector:
-    def __init__(self, input_topic, depth_input, depth_output, output_image, output_pose):
-        # Initialize Mediapipe hand detection module
+    def __init__(self, rgb_topic, depth_topic, depth_output, annotated_image, hand_pose):
         self.mp_hands = mp.solutions.hands
         self.hands = self.mp_hands.Hands(static_image_mode=False, max_num_hands=2, min_detection_confidence=0.9)
         self.mp_drawing = mp.solutions.drawing_utils
         rospy.init_node('hand_pose_detection')
         self.bridge = CvBridge()
-        self.sub = rospy.Subscriber(input_topic, Image, self.image_callback)
-        self.pub = rospy.Publisher(output_image, Image, queue_size=10)
-        self.pose_pub = rospy.Publisher(output_pose,PoseStamped, queue_size =10)
-        self.depth_sub = rospy.Subscriber(depth_input, Image, self.depth_callback)
+        self.sub = rospy.Subscriber(rgb_topic, Image, self.image_callback)
+        self.pub = rospy.Publisher(annotated_image, Image, queue_size=10)
+        self.pose_pub = rospy.Publisher(hand_pose,PoseStamped, queue_size =10)
+        self.depth_sub = rospy.Subscriber(depth_topic, Image, self.depth_callback)
         self.depth_pub = rospy.Publisher(depth_output, PoseStamped, queue_size=10)
         self.camera_mat = np.array([[615.8245849609375, 0.0, 322.6065368652344, 0.0, 0.0, 616.0632934570312, 235.29945373535156, 0.0, 0.0, 0.0, 1.0, 0.0]])
         self.intrinsic = np.array([[615.8245849609375, 0.0, 322.6065368652344], 
@@ -48,15 +47,12 @@ class HandPoseDetector:
         self.color_intrinsics.ppy = self.cy
         self.color_intrinsics.height = 480
         self.color_intrinsics.width = 848
-        
 
     def depth_callback(self,msg):
         depth_array = self.bridge.imgmsg_to_cv2(msg, desired_encoding="passthrough")
         self.z_depth = depth_array[self.y_rgb,self.x_rgb]/1000
 
     def image_callback(self, msg):
-        # print(msg)
-        # color_image= self.bridge.imgmsg_to_cv2(msg,desired_encoding="passthrough")
         color_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='rgb8')
         results = self.hands.process(color_image)
         hand_pose = []
@@ -65,7 +61,7 @@ class HandPoseDetector:
                 self.mp_drawing.draw_landmarks(
                     color_image, hand_landmarks, self.mp_hands.HAND_CONNECTIONS)
                 for id,lm in enumerate(hand_landmarks.landmark):
-                    h,w,c = color_image.shape
+                    h,w,_ = color_image.shape
                     cx_image,cy_image = int(lm.x*w),int(lm.y*h)
                     self.x_rgb = cx_image
                     self.y_rgb = cy_image
@@ -91,5 +87,5 @@ class HandPoseDetector:
         cv2.destroyAllWindows()
 
 if __name__ == '__main__':
-    detector = HandPoseDetector('/camera/color/image_raw','camera/aligned_depth_to_color/image_raw','/depth_out', '/annotated_image','/output_pose')
+    detector = HandPoseDetector('/camera/color/image_raw','camera/aligned_depth_to_color/image_raw','/depth_output', '/annotated_image','/hand_pose')
     detector.run()

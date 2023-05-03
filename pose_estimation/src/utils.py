@@ -154,7 +154,6 @@ def get_can_pose(frame, queue_x, queue_y, queue_radius,min_radius,max_radius,thr
                 base_coord_max = np.matmul(transform, camera_cord_max)                
                 pose_msg.pose.position.x = (base_coord_min[0]+ base_coord_max[0])/2 
                 pose_msg.pose.position.y = (base_coord_min[1]+base_coord_max[1])/2
-<<<<<<< HEAD:pose_estimation/src/pose_functions.py
                 # pose_msg.pose.position.y = 1
                 # pose_msg.pose.position.x = 0
                 pose_msg.pose.position.z = 0.065
@@ -168,13 +167,6 @@ def get_can_pose(frame, queue_x, queue_y, queue_radius,min_radius,max_radius,thr
                 pose_msg.pose.orientation.w = 0
                 # cv2.imshow("frame",frame)
             # cv2.imshow("image",frame)
-=======
-                pose_msg.pose.position.z = 0.025
-                pose_msg.pose.orientation.x = np.sin(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) - np.cos(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
-                pose_msg.pose.orientation.y =  np.cos(roll/2) * np.sin(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.cos(pitch/2) * np.sin(yaw/2)
-                pose_msg.pose.orientation.z = np.cos(roll/2) * np.cos(pitch/2) * np.sin(yaw/2) - np.sin(roll/2) * np.sin(pitch/2) * np.cos(yaw/2)
-                pose_msg.pose.orientation.w = np.cos(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
->>>>>>> cdf0b24f965715ee36401cf5ea917ff3046f3626:pose_estimation/src/utils.py
                 return pose_msg
 
 

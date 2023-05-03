@@ -176,11 +176,15 @@ def get_can_pose_vertical_hough(frame, queue_x, queue_y, queue_radius,min_radius
                 pose_msg.pose.position.y = (base_coord_min[1]+base_coord_max[1])/2
                 # pose_msg.pose.position.y = 1
                 # pose_msg.pose.position.x = 0
-                pose_msg.pose.position.z = 0.025
-                pose_msg.pose.orientation.x = np.sin(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) - np.cos(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
-                pose_msg.pose.orientation.y =  np.cos(roll/2) * np.sin(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.cos(pitch/2) * np.sin(yaw/2)
-                pose_msg.pose.orientation.z = np.cos(roll/2) * np.cos(pitch/2) * np.sin(yaw/2) - np.sin(roll/2) * np.sin(pitch/2) * np.cos(yaw/2)
-                pose_msg.pose.orientation.w = np.cos(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
+                pose_msg.pose.position.z = 0.065
+                # pose_msg.pose.orientation.x = np.sin(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) - np.cos(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
+                # pose_msg.pose.orientation.y =  np.cos(roll/2) * np.sin(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.cos(pitch/2) * np.sin(yaw/2)
+                # pose_msg.pose.orientation.z = np.cos(roll/2) * np.cos(pitch/2) * np.sin(yaw/2) - np.sin(roll/2) * np.sin(pitch/2) * np.cos(yaw/2)
+                # pose_msg.pose.orientation.w = np.cos(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
+                pose_msg.pose.orientation.x = 1
+                pose_msg.pose.orientation.y = 0
+                pose_msg.pose.orientation.z = 0
+                pose_msg.pose.orientation.w = 0
                 # cv2.imshow("frame",frame)
             # cv2.imshow("image",frame)
                 return pose_msg

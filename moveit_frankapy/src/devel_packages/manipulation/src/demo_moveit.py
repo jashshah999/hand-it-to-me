@@ -5,6 +5,7 @@ import rospy
 import moveit_commander
 import moveit_msgs.msg
 import geometry_msgs.msg
+from std_msgs.msg import Bool
 import sensor_msgs.msg
 import numpy as np
 from moveit_msgs.msg import PlanningScene, CollisionObject
@@ -37,7 +38,10 @@ class moveit_planner():
         eef_link = self.group.get_end_effector_link()
 
         self.goal_pub = rospy.Subscriber("/goal_location", geometry_msgs.msg.PoseStamped, self.goal_pose_callback, queue_size=1)
+        self.cancel_pub = rospy.Subscriber("/reset_required", Bool, self.reset_goal_callback, queue_size=1)
         self.is_goal_active = False
+
+        self.cancel_requested = False
         print("---------Moveit Planner Class Initialized---------")
         print("Planning frame: ", planning_frame)
         print("End effector: ", eef_link)
@@ -57,7 +61,7 @@ class moveit_planner():
         self.fa.reset_joints()
 
     def goto_joint(self, joint_goal):
-        self.fa.goto_joints(joint_goal, duration=5, dynamic=True, buffer_time=10, ignore_virtual_walls=False)
+        self.fa.goto_joints(joint_goal, duration=15, dynamic=True, buffer_time=150, ignore_virtual_walls=True)
     
     def get_plan_given_pose(self, pose_goal: geometry_msgs.msg.Pose):
         """
@@ -128,7 +132,7 @@ class moveit_planner():
 
         rate = rospy.Rate(50)
         # To ensure skill doesn't end before completing trajectory, make the buffer time much longer than needed
-        self.fa.goto_joints(interpolated_traj[1], duration=5, dynamic=True, buffer_time=20, )
+        self.fa.goto_joints(interpolated_traj[1], duration=15, dynamic=True, buffer_time=150, ignore_virtual_walls=True)
         init_time = rospy.Time.now().to_time()
         for i in range(2, interpolated_traj.shape[0]):
             traj_gen_proto_msg = JointPositionSensorMessage(
@@ -139,6 +143,10 @@ class moveit_planner():
                 trajectory_generator_sensor_msg=sensor_proto2ros_msg(
                     traj_gen_proto_msg, SensorDataMessageType.JOINT_POSITION)
             )
+
+            if (self.cancel_requested):
+                self.cancel_requested = False
+                break
             self.pub.publish(ros_msg)
             rate.sleep()
 
@@ -150,6 +158,7 @@ class moveit_planner():
                 term_proto_msg, SensorDataMessageType.SHOULD_TERMINATE)
             )
         self.pub.publish(ros_msg)
+        self.fa.stop_skill()
     
     # Test Functions
     def unit_test_joint(self, execute = False, guided = False):
@@ -308,6 +317,11 @@ class moveit_planner():
         # if execute:
         print("Executing Plan")
         self.execute_plan(plan_pose)
+
+    def reset_goal_callback(self, data):
+        if (data.data == True):
+            self.cancel_requested = True
+
 
 
 

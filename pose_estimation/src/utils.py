@@ -1,34 +1,11 @@
 import mediapipe as mp
 import cv2
 import numpy as np
-# from tf.transformations import quaternion_from_euler
 import statistics
-camera_mat = np.array([[975.9609985351562, 0.0, 1018.8323974609375, 0.0, 0.0, 975.6666870117188, 777.054931640625, 0.0, 0.0, 0.0, 1.0, 0.0]])
-
-intrinsic = np.array([[975.9609985351562, 0.0, 1018.8323974609375], 
-                          [0.0, 975.6666870117188, 777.054931640625], 
-                          [0.0, 0.0, 1.0]])
-
-fx = intrinsic[0, 0]
-fy = intrinsic[1, 1]
-cx = intrinsic[0, 2]
-cy = intrinsic[1, 2]
-
-rotation = np.array([[-0.05437199,  0.99769028, -0.04071191],       
-                        [0.99807252,  0.05551034,  0.02739719],
-                        [0.02959404, -0.03914623, -0.99878567]])
-
-translation = np.array([[0.64138432 , 0.1008975 ,  0.831477 ]]).reshape(3, 1)
-
-transform = np.hstack((rotation, translation))
-
-z =0.685
-
-
-mp_drawing = mp.solutions.drawing_utils
-mp_hands = mp.solutions.hands
 
 def get_hand_pose(frame, vis_flag = 1):
+    mp_drawing = mp.solutions.drawing_utils
+    mp_hands = mp.solutions.hands
     with mp_hands.Hands(min_detection_confidence=0.8, min_tracking_confidence=0.5) as hands:
 
         image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -95,7 +72,28 @@ def get_can_pose_horizontal_hsv(frame):
             return identifier_coordinates
 
 
-def get_can_pose_vertical_hough(frame, queue_x, queue_y, queue_radius,min_radius,max_radius,threshold,min_distance,pose_msg):
+def get_can_pose(frame, queue_x, queue_y, queue_radius,min_radius,max_radius,threshold,min_distance,pose_msg):
+    camera_mat = np.array([[975.9609985351562, 0.0, 1018.8323974609375, 0.0, 0.0, 975.6666870117188, 777.054931640625, 0.0, 0.0, 0.0, 1.0, 0.0]])
+
+    intrinsic = np.array([[975.9609985351562, 0.0, 1018.8323974609375], 
+                          [0.0, 975.6666870117188, 777.054931640625], 
+                          [0.0, 0.0, 1.0]])
+
+    fx = intrinsic[0, 0]
+    fy = intrinsic[1, 1]
+    cx = intrinsic[0, 2]
+    cy = intrinsic[1, 2]
+
+    rotation = np.array([[-0.05437199,  0.99769028, -0.04071191],       
+                            [0.99807252,  0.05551034,  0.02739719],
+                            [0.02959404, -0.03914623, -0.99878567]])
+
+    translation = np.array([[0.64138432 , 0.1008975 ,  0.831477 ]]).reshape(3, 1)
+
+    transform = np.hstack((rotation, translation))
+
+    z =0.685
+
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     blurred = cv2.GaussianBlur(gray, (5, 5), 0)
     circles = cv2.HoughCircles(blurred, cv2.HOUGH_GRADIENT, dp=1, minDist=min_distance,
@@ -106,12 +104,9 @@ def get_can_pose_vertical_hough(frame, queue_x, queue_y, queue_radius,min_radius
             circles = np.round(circles[0, :]).astype("int")
             for (x, y, r) in circles:
                 cv2.circle(frame, (x, y), r, (0, 255, 0), 2)
-                # cv2.imshow("frame",frame)
                 x_cam_frame = ((x-cx)/fx)*z
                 y_cam_frame = ((y-cx)/fx)*z
-
                 camera_cord = np.array([[x_cam_frame, y_cam_frame, z, 1]]).T
-                # print(camera_cord)
                 base_cord = np.matmul(transform, camera_cord)
                 print(base_cord)
                 queue_radius.append(r)
@@ -125,7 +120,6 @@ def get_can_pose_vertical_hough(frame, queue_x, queue_y, queue_radius,min_radius
                 pose_msg.pose.orientation.y = 0
                 pose_msg.pose.orientation.z = 0
                 pose_msg.pose.orientation.w = 0
-                # cv2.imshow("frame",frame)
                 return pose_msg
     else:
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
@@ -134,46 +128,33 @@ def get_can_pose_vertical_hough(frame, queue_x, queue_y, queue_radius,min_radius
         mask = cv2.inRange(hsv, lower_blue, upper_blue)
         contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         for cnt in contours:
-            # Get the minimum area rectangle of the contour
             rect = cv2.minAreaRect(cnt)
             box = cv2.boxPoints(rect)
             box = np.int0(box)
-
-            # Get the width and height of the rectangle
             width = int(rect[1][0])
             height = int(rect[1][1])
-
-            # Check if the rectangle is big enough to be a fallen rectangle
             if width > 70 and height > 70:
-                # Draw a green rectangle around the detected object
                 cv2.drawContours(frame, [box], 0, (0, 255, 0), 2)
                 cv2.imshow("frame",frame)
-                # print(box)0
-                # Get the angle of the rectangle
                 angle = rect[2]
                 roll =np.deg2rad(angle) 
                 pitch = 0
-                # print(angle)
                 yaw = 0
-                # print(yaw)
-                # quaternion_fallen = quaternion_from_euler(0,0,angle)
                 min_x = np.min(box[:,0])
                 min_y = np.min(box[:,1])
                 max_x = np.max(box[:,0])
                 max_y = np.max(box[:,1])
-
                 min_x_cam_frame = ((min_x-cx)/fx)*z
                 min_y_cam_frame = ((min_y-cx)/fx)*z
                 max_x_cam_frame = ((max_x-cx)/fx)*z
                 max_y_cam_frame = ((max_y-cx)/fx)*z
-
                 camera_cord_min = np.array([[min_x_cam_frame, min_y_cam_frame, z, 1]]).T
                 camera_cord_max = np.array([[max_x_cam_frame, max_y_cam_frame, z, 1]]).T 
                 base_coord_min = np.matmul(transform, camera_cord_min)
-                base_coord_max = np.matmul(transform, camera_cord_max)
-                
+                base_coord_max = np.matmul(transform, camera_cord_max)                
                 pose_msg.pose.position.x = (base_coord_min[0]+ base_coord_max[0])/2 
                 pose_msg.pose.position.y = (base_coord_min[1]+base_coord_max[1])/2
+<<<<<<< HEAD:pose_estimation/src/pose_functions.py
                 # pose_msg.pose.position.y = 1
                 # pose_msg.pose.position.x = 0
                 pose_msg.pose.position.z = 0.065
@@ -187,6 +168,13 @@ def get_can_pose_vertical_hough(frame, queue_x, queue_y, queue_radius,min_radius
                 pose_msg.pose.orientation.w = 0
                 # cv2.imshow("frame",frame)
             # cv2.imshow("image",frame)
+=======
+                pose_msg.pose.position.z = 0.025
+                pose_msg.pose.orientation.x = np.sin(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) - np.cos(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
+                pose_msg.pose.orientation.y =  np.cos(roll/2) * np.sin(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.cos(pitch/2) * np.sin(yaw/2)
+                pose_msg.pose.orientation.z = np.cos(roll/2) * np.cos(pitch/2) * np.sin(yaw/2) - np.sin(roll/2) * np.sin(pitch/2) * np.cos(yaw/2)
+                pose_msg.pose.orientation.w = np.cos(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
+>>>>>>> cdf0b24f965715ee36401cf5ea917ff3046f3626:pose_estimation/src/utils.py
                 return pose_msg
 
 
